@@ -1,0 +1,12 @@
+services:
+  windrose:
+    build: .
+    image: windrose-dedicated:local
+    container_name: windrose-demo
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./source:/srv/windrose/source
+      - ./runtime:/srv/windrose/runtime
+      - ./config:/srv/windrose/config
+      - ./logs:/srv/windrose/logs
