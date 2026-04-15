@@ -73,19 +73,17 @@ If the Windows server files are missing, the container exits with a clear messag
 
 If you just want the shortest path to a working test server on Linux:
 
-1. Install Docker and Docker Compose.
+1. Install the Linux-side requirements with the helper script.
 2. Copy this repo to the Linux host.
 3. Put the Steam Tools files into `./source/`.
 4. Start the container.
 5. Read the invite code.
 6. Join from the game client with `Play -> Connect to Server`.
 
-Ubuntu example:
+Recommended host bootstrap:
 
 ```bash
-sudo apt-get update
-sudo apt-get install -y docker.io docker-compose-v2 unzip jq
-sudo systemctl enable --now docker
+sudo ./scripts/install-host-requirements.sh
 ```
 
 Example:
@@ -93,8 +91,7 @@ Example:
 ```bash
 git clone https://github.com/biers04/windrose_docker.git windrose-dedicated
 cd windrose-dedicated
-cp compose.example.yaml compose.yaml
-mkdir -p source runtime config logs
+sudo ./scripts/install-host-requirements.sh
 # Copy the contents of your Windows "Windrose Dedicated Server" install into ./source
 docker compose build
 docker compose up -d
@@ -208,6 +205,25 @@ The config files follow the official schema from the bundled `DedicatedServer.md
 - `WorldSettings.BoolParameters`
 - `WorldSettings.FloatParameters`
 - `WorldSettings.TagParameters`
+
+## Host requirements
+
+This repo includes a host bootstrap script:
+
+```bash
+sudo ./scripts/install-host-requirements.sh
+```
+
+It does these Linux-side setup steps for you:
+
+- installs `docker.io`
+- installs `docker-compose-v2`
+- installs `unzip` and `jq`
+- enables and starts Docker
+- creates `source/`, `runtime/`, `config/`, and `logs/`
+- creates `compose.yaml` from `compose.example.yaml` if needed
+
+It does not download the actual Windrose dedicated-server files. Those still need to come from the official Steam Tools install on Windows.
 
 ## Importing a Windows zip on Linux
 
