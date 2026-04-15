@@ -132,19 +132,33 @@ There are two supported ways to get the invite code for a running server:
 1. Watch the startup console logs.
 2. Read `ServerDescription.json` after the server has started.
 
-In this Docker layout, the easiest path is:
-
-```bash
-jq -r '.ServerDescription_Persistent.InviteCode' ./runtime/ServerDescription.json
-```
-
-There is also a helper script:
+In this Docker layout, the recommended path is the helper script:
 
 ```bash
 ./scripts/show-invite-code.sh .
 ```
 
-That script reads `runtime/ServerDescription.json` first, then falls back to `config/ServerDescription.json`.
+That script checks these files in order:
+
+1. `runtime/R5/ServerDescription.json`
+2. `runtime/ServerDescription.json`
+3. `config/ServerDescription.json`
+
+This matters because the live game runtime may update its own server description during startup, and that runtime file is the best source of truth for the currently active invite code.
+
+If you want to read it manually, the most authoritative file is usually:
+
+```bash
+jq -r '.ServerDescription_Persistent.InviteCode' ./runtime/R5/ServerDescription.json
+```
+
+If the helper script does not return a value yet, check the logs:
+
+```bash
+docker compose logs -f
+```
+
+Windrose prints a `Server Connection Info` block when registration succeeds, and the invite code shown there is what players should use in `Play -> Connect to Server`.
 
 ## Config workflow
 
