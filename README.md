@@ -17,7 +17,7 @@ Source used:
 
 - A Docker image that can run the Windows dedicated server on Ubuntu.
 - A clean project layout for one or more Windrose instances.
-- Managed `ServerDescription.json` and `WorldDescription.json` files outside the runtime tree.
+- Editable `ServerDescription.json` and `WorldDescription.json` files outside the runtime tree.
 
 ## Project layout
 
@@ -33,7 +33,7 @@ compose.yaml
 
 - `source/`: copy the Windows dedicated-server files here.
 - `runtime/`: the container copies `source/` here on first boot and runs from this writable tree.
-- `config/`: dashboard-managed JSON files that get synced into the runtime tree on launch.
+- `config/`: the JSON files you edit on the server. The container syncs them into the runtime tree on launch.
 - `logs/`: container and Wine logs.
 
 ## Getting the server files
@@ -91,7 +91,7 @@ sudo systemctl enable --now docker
 Example:
 
 ```bash
-git clone <your-repo-url> windrose-dedicated
+git clone https://github.com/biers04/windrose_docker.git windrose-dedicated
 cd windrose-dedicated
 cp compose.example.yaml compose.yaml
 mkdir -p source runtime config logs
@@ -112,6 +112,33 @@ If you later change settings in `config/ServerDescription.json` or `config/World
 
 ```bash
 docker compose up -d --force-recreate
+```
+
+## Changing server settings
+
+Edit these files on the Linux host:
+
+- `config/ServerDescription.json`
+- `config/WorldDescription.json`
+
+For example:
+
+```bash
+nano config/ServerDescription.json
+nano config/WorldDescription.json
+```
+
+After saving your changes, restart the container:
+
+```bash
+docker compose up -d --force-recreate
+```
+
+Then verify the server and invite code:
+
+```bash
+docker compose logs -f
+./scripts/show-invite-code.sh .
 ```
 
 ## Networking and joining
@@ -167,14 +194,14 @@ The guide identifies two important config files:
 - `ServerDescription.json`
 - `WorldDescription.json`
 
-This project stores managed copies in `config/`. At container start:
+This project stores the admin-edited copies in `config/`. At container start:
 
 1. `config/ServerDescription.json` is copied into the runtime root.
 2. `config/WorldDescription.json` is copied into the latest discovered versioned world path.
 
 On a brand new instance, Windrose creates its versioned RocksDB world directory during the first successful boot. That means world-setting changes are fully applied after the first startup has created a real path such as `R5/Saved/SaveProfiles/Default/RocksDB/0.10.0/Worlds/<world id>/WorldDescription.json`.
 
-The managed files follow the official schema from the bundled `DedicatedServer.md`, including:
+The config files follow the official schema from the bundled `DedicatedServer.md`, including:
 
 - `ServerDescription_Persistent`
 - `WorldDescription`
