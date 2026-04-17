@@ -5,11 +5,14 @@ SOURCE_DIR="${SOURCE_DIR:-/srv/windrose/source}"
 RUNTIME_DIR="${RUNTIME_DIR:-/srv/windrose/runtime}"
 CONFIG_DIR="${CONFIG_DIR:-/srv/windrose/config}"
 LOG_DIR="${LOG_DIR:-/srv/windrose/logs}"
+STEAM_STATE_DIR="${STEAM_STATE_DIR:-/srv/windrose/steamcmd}"
 SOURCE_EXECUTABLE="${WINDROSE_SOURCE_EXECUTABLE:-WindroseServer.exe}"
 EXECUTABLE="${WINDROSE_EXECUTABLE:-R5/Binaries/Win64/WindroseServer-Win64-Shipping.exe}"
 WINE_COMMAND="${WINDROSE_WINE_COMMAND:-wine}"
 
-mkdir -p "$SOURCE_DIR" "$RUNTIME_DIR" "$CONFIG_DIR" "$LOG_DIR"
+mkdir -p "$SOURCE_DIR" "$RUNTIME_DIR" "$CONFIG_DIR" "$LOG_DIR" "$STEAM_STATE_DIR"
+
+/usr/local/bin/update-source.sh
 
 if [[ ! -f "$SOURCE_DIR/$SOURCE_EXECUTABLE" ]]; then
   cat <<EOF
@@ -37,9 +40,7 @@ EOF
   exit 1
 fi
 
-if [[ ! -f "$RUNTIME_DIR/$EXECUTABLE" ]]; then
-  cp -a "$SOURCE_DIR/." "$RUNTIME_DIR/"
-fi
+rsync -a "$SOURCE_DIR"/ "$RUNTIME_DIR"/
 
 if [[ ! -d "$WINEPREFIX" ]]; then
   mkdir -p "$WINEPREFIX"

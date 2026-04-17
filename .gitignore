@@ -1,6 +1,7 @@
 runtime/
 logs/
 source/
+steamcmd/
 .env
 __pycache__/
 *.pyc

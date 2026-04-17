@@ -18,6 +18,7 @@ Source used:
 - A Docker image that can run the Windows dedicated server on Ubuntu.
 - A clean project layout for one or more Windrose instances.
 - Editable `ServerDescription.json` and `WorldDescription.json` files outside the runtime tree.
+- Optional authenticated SteamCMD update checks on container boot.
 
 ## Project layout
 
@@ -28,13 +29,17 @@ config/
 logs/
 runtime/
 source/
+steamcmd/
+.env
 compose.yaml
 ```
 
 - `source/`: copy the Windows dedicated-server files here.
-- `runtime/`: the container copies `source/` here on first boot and runs from this writable tree.
+- `runtime/`: the container runs from this writable tree and refreshes it from `source/` on startup.
 - `config/`: the JSON files you edit on the server. The container syncs admin-owned settings into the runtime tree on launch.
 - `logs/`: container and Wine logs.
+- `steamcmd/`: persisted SteamCMD home directory for authenticated update checks and cached login state.
+- `.env`: optional Steam credentials and SteamCMD settings for automatic update checks.
 
 ## Getting the server files
 
@@ -53,7 +58,7 @@ Other options:
    Copy the full dedicated-server folder into `source/`.
 
 2. SteamCMD with a licensed Steam account:
-   The app metadata is public, but anonymous SteamCMD did not allow the actual depot download during testing on April 15, 2026. If you use SteamCMD here, use a real Steam account that has access to Windrose.
+   The app metadata is public, but anonymous SteamCMD did not allow the actual depot download during testing on April 15, 2026. If you use SteamCMD here, use a real Steam account that has access to Windrose. This repo can run an authenticated SteamCMD update check on container boot.
 
 3. Anonymous SteamCMD:
    Not reliable at the moment. Metadata works, but content download did not.
@@ -62,6 +67,7 @@ Other options:
 
 ```bash
 cp compose.example.yaml compose.yaml
+cp .env.example .env
 docker compose build
 docker compose up -d
 docker compose logs -f
@@ -92,6 +98,7 @@ Example:
 git clone https://github.com/biers04/windrose_docker.git windrose-dedicated
 cd windrose-dedicated
 sudo ./scripts/install-host-requirements.sh
+cp .env.example .env
 # Copy the contents of your Windows "Windrose Dedicated Server" install into ./source
 docker compose build
 docker compose up -d
@@ -137,6 +144,47 @@ Then verify the server and invite code:
 docker compose logs -f
 ./scripts/show-invite-code.sh .
 ```
+
+## SteamCMD updates on boot
+
+If you want the container to check Steam for updates every time it starts, copy the example environment file and set your Steam credentials:
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+Example:
+
+```dotenv
+STEAM_UPDATE_ON_BOOT=true
+STEAM_USERNAME=your-steam-account
+STEAM_PASSWORD=your-steam-password
+STEAMCMD_APP_ID=4129620
+STEAMCMD_PLATFORM=windows
+STEAMCMD_VALIDATE=false
+```
+
+How it works:
+
+- On container start, the image runs an authenticated SteamCMD `app_update` against app `4129620`.
+- The install target is `./source`, so Steam-managed server files stay outside the writable runtime tree.
+- The container then `rsync`s `source/` into `runtime/` before launch so updated binaries are picked up on the same boot.
+- SteamCMD state is persisted in `./steamcmd`, which lets cached login state survive reboots.
+
+Important:
+
+- Anonymous SteamCMD was not enough for Windrose during testing; use a real Steam account with access to the dedicated server tool.
+- Storing a Steam password in `.env` is convenient but sensitive. Keep `.env` private.
+- If Steam Guard blocks the first automated login, prime the SteamCMD state once and then future reboot checks can reuse the cached session.
+
+One-time SteamCMD priming helper:
+
+```bash
+./scripts/prime-steamcmd.sh .
+```
+
+That opens SteamCMD inside the container with your persisted `./steamcmd` directory. If Steam prompts for Steam Guard on first login, complete that once there and then exit. After that, normal `docker compose up -d` boots can reuse the saved SteamCMD state.
 
 ## Networking and joining
 
@@ -231,7 +279,9 @@ It does these Linux-side setup steps for you:
 - installs `unzip` and `jq`
 - enables and starts Docker
 - creates `source/`, `runtime/`, `config/`, and `logs/`
+- creates `steamcmd/`
 - creates `compose.yaml` from `compose.example.yaml` if needed
+- copies `.env.example` to `.env` if needed
 
 It does not download the actual Windrose dedicated-server files. Those still need to come from the official Steam Tools install on Windows.
 
@@ -265,3 +315,4 @@ That keeps the runtime path closer to the successful manual Wine launch we valid
 - It is not an officially supported Linux runtime from the game developer.
 - Networking for Windrose appears to rely on NAT punch-through / UPnP according to the public guide, so the compose file uses `network_mode: host` on Linux instead of fixed published ports.
 - You should keep the copied server files up to date with the game client version.
+- GitHub's web UI sometimes briefly shows banners like `Cannot retrieve latest commit at this time` even when the repo and commits are fine. If the file tree is loading and `git clone` or `git fetch` still works, that is usually a transient GitHub-side web issue rather than a repo corruption issue.

@@ -5,8 +5,16 @@ services:
     container_name: windrose-demo
     restart: unless-stopped
     network_mode: host
+    environment:
+      STEAM_UPDATE_ON_BOOT: ${STEAM_UPDATE_ON_BOOT:-false}
+      STEAM_USERNAME: ${STEAM_USERNAME:-}
+      STEAM_PASSWORD: ${STEAM_PASSWORD:-}
+      STEAMCMD_APP_ID: ${STEAMCMD_APP_ID:-4129620}
+      STEAMCMD_PLATFORM: ${STEAMCMD_PLATFORM:-windows}
+      STEAMCMD_VALIDATE: ${STEAMCMD_VALIDATE:-false}
     volumes:
       - ./source:/srv/windrose/source
       - ./runtime:/srv/windrose/runtime
       - ./config:/srv/windrose/config
       - ./logs:/srv/windrose/logs
+      - ./steamcmd:/srv/windrose/steamcmd
