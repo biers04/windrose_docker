@@ -334,7 +334,7 @@ It does these Linux-side setup steps for you:
 - creates `compose.yaml` from `compose.example.yaml` if needed
 - copies `.env.example` to `.env` if needed
 
-It does not download the actual Windrose dedicated-server files. Those still need to come from the official Steam Tools install on Windows.
+It does not download the actual Windrose dedicated-server files by itself. The dedicated server can be installed and updated automatically if SteamCMD is configured in `.env`, or you can still supply the files manually from the official Steam Tools install on Windows.
 
 ## Optional host tuning
 
