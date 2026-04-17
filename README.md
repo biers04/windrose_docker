@@ -198,16 +198,16 @@ That opens SteamCMD inside the container with your persisted `./steamcmd` direct
 
 For a real deployed instance, edit the instance `.env`, not the repo copy.
 
-Example for the live Windrose test server used in this project:
+Example with a normal home-directory install:
 
 ```bash
-nano /home/pve/windrose-servers/19/.env
+nano /home/your-user/windrose-servers/19/.env
 ```
 
 Or with the helper:
 
 ```bash
-/home/pve/windrose-dedicated/scripts/edit-steam-env.sh /home/pve/windrose-servers/19
+/home/your-user/windrose-dedicated/scripts/edit-steam-env.sh /home/your-user/windrose-servers/19
 ```
 
 Then set:
@@ -224,7 +224,7 @@ STEAMCMD_VALIDATE=false
 After saving, restart the instance:
 
 ```bash
-cd /home/pve/windrose-servers/19
+cd /home/your-user/windrose-servers/19
 docker compose up -d --force-recreate
 ```
 
