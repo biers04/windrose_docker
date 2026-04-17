@@ -73,6 +73,8 @@ docker compose up -d
 docker compose logs -f
 ```
 
+`docker compose build` downloads SteamCMD into the image automatically. You do not need to install SteamCMD separately on the host.
+
 If the Windows server files are missing, the container exits with a clear message telling you which directory to populate.
 
 ## Quick start
@@ -154,6 +156,12 @@ cp .env.example .env
 nano .env
 ```
 
+Or use the helper:
+
+```bash
+./scripts/edit-steam-env.sh .
+```
+
 Example:
 
 ```dotenv
@@ -185,6 +193,40 @@ One-time SteamCMD priming helper:
 ```
 
 That opens SteamCMD inside the container with your persisted `./steamcmd` directory. If Steam prompts for Steam Guard on first login, complete that once there and then exit. After that, normal `docker compose up -d` boots can reuse the saved SteamCMD state.
+
+## Editing the live server `.env`
+
+For a real deployed instance, edit the instance `.env`, not the repo copy.
+
+Example for the live Windrose test server used in this project:
+
+```bash
+nano /home/pve/windrose-servers/19/.env
+```
+
+Or with the helper:
+
+```bash
+/home/pve/windrose-dedicated/scripts/edit-steam-env.sh /home/pve/windrose-servers/19
+```
+
+Then set:
+
+```dotenv
+STEAM_UPDATE_ON_BOOT=true
+STEAM_USERNAME=your-steam-account
+STEAM_PASSWORD=your-steam-password
+STEAMCMD_APP_ID=4129620
+STEAMCMD_PLATFORM=windows
+STEAMCMD_VALIDATE=false
+```
+
+After saving, restart the instance:
+
+```bash
+cd /home/pve/windrose-servers/19
+docker compose up -d --force-recreate
+```
 
 ## Networking and joining
 
