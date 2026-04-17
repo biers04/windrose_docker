@@ -2,11 +2,11 @@
 
 This project runs the current Windows-only Windrose dedicated-server files inside Docker on Linux by using Wine.
 
-It is designed around the current public setup reality on April 15, 2026:
+It is designed around the current public setup reality on April 17, 2026:
 
 - The official Steam discussion and the bundled `DedicatedServer.md` describe a Windows server executable and JSON config flow.
 - The dedicated server Steam app id is `4129620`.
-- Anonymous Linux SteamCMD currently returned `Missing configuration` during validation on the target Ubuntu host, so this repo treats the Windows dedicated-server files as an input you provide.
+- Anonymous Linux SteamCMD still does not work for Windrose content download, but authenticated SteamCMD with a real Steam account is now working for install and update checks in this Docker workflow.
 - The container validates the Steam Tools root launcher `WindroseServer.exe`, but it runs the Unreal shipping binary `R5/Binaries/Win64/WindroseServer-Win64-Shipping.exe` directly under Wine for better stability in headless Docker.
 
 Source used:
@@ -18,7 +18,7 @@ Source used:
 - A Docker image that can run the Windows dedicated server on Ubuntu.
 - A clean project layout for one or more Windrose instances.
 - Editable `ServerDescription.json` and `WorldDescription.json` files outside the runtime tree.
-- Optional authenticated SteamCMD update checks on container boot.
+- Authenticated SteamCMD install and update checks on container boot.
 
 ## Project layout
 
@@ -45,22 +45,27 @@ compose.yaml
 
 Recommended source:
 
+1. Use authenticated SteamCMD through this Docker workflow.
+2. Set your Steam credentials in `.env`.
+3. Start the container and let it install or update app `4129620` into `./source/`.
+
+This is the recommended ongoing setup because it also keeps the server files current on later container restarts.
+
+Manual fallback:
+
 1. On a Windows machine with Steam, open Library.
 2. Change the library filter to `Tools`.
 3. Install `Windrose Dedicated Server`.
 4. Copy or zip the installed folder and place its contents into `source/`.
 
-This matches the official developer guidance and the bundled `DedicatedServer.md`.
+This still matches the official developer guidance and the bundled `DedicatedServer.md`, and it remains a good fallback if you do not want to store Steam credentials in `.env`.
 
-Other options:
+Other notes:
 
-1. From an existing Windows host:
-   Copy the full dedicated-server folder into `source/`.
+1. Authenticated SteamCMD with a licensed Steam account:
+   Supported in this repo for install and update checks.
 
-2. SteamCMD with a licensed Steam account:
-   The app metadata is public, but anonymous SteamCMD did not allow the actual depot download during testing on April 15, 2026. If you use SteamCMD here, use a real Steam account that has access to Windrose. This repo can run an authenticated SteamCMD update check on container boot.
-
-3. Anonymous SteamCMD:
+2. Anonymous SteamCMD:
    Not reliable at the moment. Metadata works, but content download did not.
 
 ## Local run
@@ -75,7 +80,7 @@ docker compose logs -f
 
 `docker compose build` downloads SteamCMD into the image automatically. You do not need to install SteamCMD separately on the host.
 
-If the Windows server files are missing, the container exits with a clear message telling you which directory to populate.
+If SteamCMD is disabled and the Windows server files are missing, the container exits with a clear message telling you which directory to populate.
 
 ## Quick start
 
@@ -83,7 +88,7 @@ If you just want the shortest path to a working test server on Linux:
 
 1. Install the Linux-side requirements with the helper script.
 2. Copy this repo to the Linux host.
-3. Put the Steam Tools files into `./source/`.
+3. Set your Steam credentials in `./.env`.
 4. Start the container.
 5. Read the invite code.
 6. Join from the game client with `Play -> Connect to Server`.
@@ -101,7 +106,7 @@ git clone https://github.com/biers04/windrose_docker.git windrose-dedicated
 cd windrose-dedicated
 sudo ./scripts/install-host-requirements.sh
 cp .env.example .env
-# Copy the contents of your Windows "Windrose Dedicated Server" install into ./source
+# Edit .env and set STEAM_UPDATE_ON_BOOT=true plus your Steam credentials
 docker compose build
 docker compose up -d
 docker compose logs -f
@@ -149,7 +154,9 @@ docker compose logs -f
 
 ## SteamCMD updates on boot
 
-If you want the container to check Steam for updates every time it starts, copy the example environment file and set your Steam credentials:
+Recommended setup: let the container use authenticated SteamCMD so it can install and update Windrose every time it starts or restarts.
+
+Copy the example environment file and set your Steam credentials:
 
 ```bash
 cp .env.example .env
@@ -185,6 +192,8 @@ Important:
 - Anonymous SteamCMD was not enough for Windrose during testing; use a real Steam account with access to the dedicated server tool.
 - Storing a Steam password in `.env` is convenient but sensitive. Keep `.env` private.
 - If Steam Guard blocks the first automated login, prime the SteamCMD state once and then future reboot checks can reuse the cached session.
+
+If you prefer not to use SteamCMD, you can still copy the Windows Steam Tools install into `./source/` manually and run the container that way.
 
 One-time SteamCMD priming helper:
 
