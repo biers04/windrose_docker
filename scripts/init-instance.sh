@@ -50,6 +50,7 @@ Initialized:
 
 Next:
   1. Copy the Windows dedicated-server files into $TARGET_DIR/source
-  2. Edit the JSON files in $TARGET_DIR/config
-  3. Run: docker compose -f $TARGET_DIR/compose.yaml up -d
+  2. Run the server once so Windrose creates its real runtime files
+  3. Edit the JSON files in $TARGET_DIR/config
+  4. Run: docker compose -f $TARGET_DIR/compose.yaml up -d --force-recreate
 EOF

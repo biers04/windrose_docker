@@ -33,7 +33,7 @@ compose.yaml
 
 - `source/`: copy the Windows dedicated-server files here.
 - `runtime/`: the container copies `source/` here on first boot and runs from this writable tree.
-- `config/`: the JSON files you edit on the server. The container syncs them into the runtime tree on launch.
+- `config/`: the JSON files you edit on the server. The container syncs admin-owned settings into the runtime tree on launch.
 - `logs/`: container and Wine logs.
 
 ## Getting the server files
@@ -193,10 +193,20 @@ The guide identifies two important config files:
 
 This project stores the admin-edited copies in `config/`. At container start:
 
-1. `config/ServerDescription.json` is copied into the runtime root.
-2. `config/WorldDescription.json` is copied into the latest discovered versioned world path.
+1. `config/ServerDescription.json` is merged into the runtime server description.
+2. `config/WorldDescription.json` is written into the selected saved world's versioned path.
 
 On a brand new instance, Windrose creates its versioned RocksDB world directory during the first successful boot. That means world-setting changes are fully applied after the first startup has created a real path such as `R5/Saved/SaveProfiles/Default/RocksDB/0.10.0/Worlds/<world id>/WorldDescription.json`.
+
+After first boot, the runtime-generated identity values are treated as authoritative. In practice, that means the sync script preserves or back-fills fields such as:
+
+- `DeploymentId`
+- `PersistentServerId`
+- the selected real `WorldIslandId`
+
+This avoids stale placeholder IDs from an initial config overwriting the real saved world on later restarts.
+
+`P2pProxyAddress` is the host address Windrose advertises to its P2P/ICE networking layer. `0.0.0.0` is fine as a generic bind address, but it may not be enough for clients on the same LAN or nearby network path that need a concrete host address to reach. If `P2pProxyAddress` is left as `0.0.0.0`, the sync script attempts to auto-detect a usable host LAN IP and writes that into the runtime server description before launch.
 
 The config files follow the official schema from the bundled `DedicatedServer.md`, including:
 

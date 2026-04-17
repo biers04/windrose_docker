@@ -47,4 +47,25 @@ fi
 
 cd "$RUNTIME_DIR"
 export WINEPREFIX WINEARCH DISPLAY WINE_COMMAND EXECUTABLE
-exec xvfb-run -a bash -lc 'wineboot -u >/dev/null 2>&1 || true; python3 /usr/local/bin/apply_managed_config.py; exec "$WINE_COMMAND" "$EXECUTABLE"'
+exec xvfb-run -a bash -lc '
+  set -euo pipefail
+  wineboot -u >/dev/null 2>&1 || true
+  python3 /usr/local/bin/apply_managed_config.py
+
+  "$WINE_COMMAND" "$EXECUTABLE" &
+  server_pid=$!
+  trap "kill $server_pid 2>/dev/null || true" INT TERM
+
+  for _ in $(seq 1 60); do
+    if [[ -f /srv/windrose/runtime/R5/ServerDescription.json ]]; then
+      python3 /usr/local/bin/apply_managed_config.py || true
+      break
+    fi
+    if ! kill -0 "$server_pid" 2>/dev/null; then
+      break
+    fi
+    sleep 2
+  done
+
+  wait "$server_pid"
+'
