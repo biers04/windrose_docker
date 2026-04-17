@@ -327,6 +327,32 @@ It does these Linux-side setup steps for you:
 
 It does not download the actual Windrose dedicated-server files. Those still need to come from the official Steam Tools install on Windows.
 
+## Optional host tuning
+
+These are optional Linux VM recommendations, not Windrose-specific requirements.
+
+On small game-server VMs, `irqbalance` can help by spreading hardware interrupts across available vCPUs instead of letting too much interrupt handling stay concentrated on one CPU. It is not a dramatic tuning change, but it is a sensible low-risk default on multi-core KVM or Proxmox guests.
+
+Example install:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y irqbalance qemu-guest-agent
+sudo systemctl enable --now irqbalance qemu-guest-agent
+```
+
+Conservative VM memory tuning can also be reasonable for game servers:
+
+```bash
+sudo tee /etc/sysctl.d/99-windrose-tuning.conf >/dev/null <<'EOF'
+vm.swappiness=10
+vm.vfs_cache_pressure=50
+EOF
+sudo sysctl --system
+```
+
+That keeps the guest less eager to swap and less aggressive about reclaiming cache. These are safe optional defaults, but they are not required for normal operation.
+
 ## Importing a Windows zip on Linux
 
 If you exported the Steam install as a zip from Windows:
